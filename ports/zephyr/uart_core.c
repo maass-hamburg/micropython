@@ -38,7 +38,6 @@
 
 #ifdef CONFIG_CONSOLE_SUBSYS
 
-static int mp_console_putchar(char c);
 static int mp_console_getchar(void);
 
 
@@ -91,9 +90,13 @@ int mp_hal_stdin_rx_chr(void) {
 mp_uint_t mp_hal_stdout_tx_strn(const char *str, mp_uint_t len) {
     mp_uint_t ret = len;
     #ifdef CONFIG_CONSOLE_SUBSYS
-    while (len--) {
-        char c = *str++;
-        while (mp_console_putchar(c) == -1) {
+    ssize_t written;
+    while (len > 0) {
+        written = tty_write(&mp_console_serial, str, len);
+        if (written > 0) {
+            str += written;
+            len -= written;
+        } else {
             MICROPY_EVENT_POLL_HOOK
         }
     }
@@ -143,10 +146,6 @@ int mp_console_init(void) {
     tty_set_tx_timeout(&mp_console_serial, 1);
 
     return 0;
-}
-
-static int mp_console_putchar(char c) {
-    return tty_write(&mp_console_serial, &c, 1);
 }
 
 static int mp_console_getchar(void) {
