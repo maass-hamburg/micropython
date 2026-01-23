@@ -59,7 +59,7 @@ uintptr_t mp_hal_stdio_poll(uintptr_t poll_flags) {
         #ifdef CONFIG_CONSOLE_SUBSYS
         // It's not easy to test if tty is readable, so just unconditionally set it for now.
         ret |= MP_STREAM_POLL_RD;
-        #else
+        #elif defined(CONFIG_UART_CONSOLE_DEBUG_SERVER_HOOKS)
         if (zephyr_getchar_check()) {
             ret |= MP_STREAM_POLL_RD;
         }
@@ -77,7 +77,7 @@ int mp_hal_stdin_rx_chr(void) {
         int _chr;
         #ifdef CONFIG_CONSOLE_SUBSYS
         _chr = mp_console_getchar();
-        #else
+        #elif defined(CONFIG_UART_CONSOLE_DEBUG_SERVER_HOOKS)
         _chr = zephyr_getchar();
         #endif
         if (_chr >= 0) {

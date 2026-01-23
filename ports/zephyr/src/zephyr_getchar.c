@@ -20,6 +20,8 @@
 #include <zephyr/sys/printk.h>
 #include "zephyr_getchar.h"
 
+#ifdef CONFIG_UART_CONSOLE_DEBUG_SERVER_HOOKS
+
 extern int mp_interrupt_char;
 void mp_sched_keyboard_interrupt(void);
 void mp_hal_signal_event(void);
@@ -66,3 +68,4 @@ void zephyr_getchar_init(void) {
     // All NULLs because we're interested only in the callback above
     uart_register_input(NULL, NULL, NULL);
 }
+#endif // CONFIG_UART_CONSOLE_DEBUG_SERVER_HOOKS

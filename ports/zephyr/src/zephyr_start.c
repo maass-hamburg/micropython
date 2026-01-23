@@ -32,7 +32,7 @@ int mp_console_init(void);
 int main(void) {
     #ifdef CONFIG_CONSOLE_SUBSYS
     mp_console_init();
-    #else
+    #elif defined(CONFIG_UART_CONSOLE_DEBUG_SERVER_HOOKS)
     zephyr_getchar_init();
     #endif
     real_main();
