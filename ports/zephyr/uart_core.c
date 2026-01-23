@@ -34,9 +34,14 @@
 #include <zephyr/console/console.h>
 #include <zephyr/console/tty.h>
 #include <zephyr/drivers/uart.h>
+#include <zephyr/version.h>
+
+#if ZEPHYR_VERSION_CODE >= ZEPHYR_VERSION(4, 3, 99)
+#define HAS_CONSOLE_SET_TIMEOUT
+#endif
 
 
-#ifdef CONFIG_CONSOLE_SUBSYS
+#if defined(CONFIG_CONSOLE_SUBSYS) && !defined(HAS_CONSOLE_SET_TIMEOUT)
 
 static int mp_console_getchar(void);
 
@@ -75,7 +80,11 @@ int mp_hal_stdin_rx_chr(void) {
     for (;;) {
         int _chr;
         #ifdef CONFIG_CONSOLE_SUBSYS
+        #ifdef HAS_CONSOLE_SET_TIMEOUT
+        _chr = console_getchar();
+        #else
         _chr = mp_console_getchar();
+        #endif
         #elif defined(CONFIG_UART_CONSOLE_DEBUG_SERVER_HOOKS)
         _chr = zephyr_getchar();
         #endif
@@ -92,7 +101,11 @@ mp_uint_t mp_hal_stdout_tx_strn(const char *str, mp_uint_t len) {
     #ifdef CONFIG_CONSOLE_SUBSYS
     ssize_t written;
     while (len > 0) {
+        #ifdef HAS_CONSOLE_SET_TIMEOUT
+        written = console_write(NULL, str, len);
+        #else
         written = tty_write(&mp_console_serial, str, len);
+        #endif
         if (written > 0) {
             str += written;
             len -= written;
@@ -113,7 +126,15 @@ mp_uint_t mp_hal_stdout_tx_strn(const char *str, mp_uint_t len) {
 
 
 #ifdef CONFIG_CONSOLE_SUBSYS
+#ifdef HAS_CONSOLE_SET_TIMEOUT
+int mp_console_init(void) {
+    console_init();
 
+    console_set_rx_timeout(K_NO_WAIT);
+    console_set_tx_timeout(K_MSEC(1));
+    return 0;
+}
+#else  // HAS_CONSOLE_SET_TIMEOUT
 int mp_console_init(void) {
 
     const struct device *uart_dev;
@@ -160,4 +181,5 @@ static int mp_console_getchar(void) {
     return c;
 }
 
+#endif  // HAS_CONSOLE_SET_TIMEOUT
 #endif  // CONFIG_CONSOLE_SUBSYS
