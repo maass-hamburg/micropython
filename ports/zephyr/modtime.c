@@ -26,13 +26,36 @@
  */
 
 #include <zephyr/kernel.h>
+#include <zephyr/sys/clock.h>
+
+#include "shared/timeutils/timeutils.h"
 
 #include "py/obj.h"
+
+static void mp_time_localtime_get(timeutils_struct_time_t *tm) {
+    struct timespec tspec;
+
+	sys_clock_gettime(SYS_CLOCK_REALTIME, &tspec);
+
+    timeutils_seconds_since_epoch_to_struct_time(tspec.tv_sec, tm);
+}
 
 static mp_obj_t mp_time_time_get(void) {
     /* The absence of FP support is deliberate. The Zephyr port uses
      * single precision floats so the fraction component will start to
      * lose precision on devices with a long uptime.
      */
-    return mp_obj_new_int(k_uptime_get() / 1000);
+    struct timespec tspec;
+
+	sys_clock_gettime(SYS_CLOCK_REALTIME, &tspec);
+
+    return timeutils_obj_from_timestamp(tspec.tv_sec);
+}
+
+uint64_t mp_hal_time_ns(void) {
+    struct timespec tspec;
+
+	sys_clock_gettime(SYS_CLOCK_REALTIME, &tspec);
+
+	return ((uint64_t)tspec.tv_sec * NSEC_PER_SEC) + tspec.tv_nsec;
 }

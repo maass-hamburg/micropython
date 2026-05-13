@@ -25,6 +25,9 @@
  */
 #include <alloca.h>
 
+// For time_t, needed by MICROPY_TIMESTAMP_IMPL_TIME_T.
+#include <time.h>
+
 // Include Zephyr's autoconf.h, which should be made first by Zephyr makefiles
 #include <zephyr/autoconf.h>
 // Included here to get basic Zephyr environment (macros, etc.)
@@ -115,8 +118,11 @@
 #if CONFIG_HARDWARE_DEVICE_CS_GENERATOR || CONFIG_PSA_CSPRNG_GENERATOR
 #define MICROPY_PY_OS_URANDOM       (1)
 #endif
+#define MICROPY_PY_TIME_GMTIME_LOCALTIME_MKTIME (1)
 #define MICROPY_PY_TIME_TIME_TIME_NS (1)
 #define MICROPY_PY_TIME_INCLUDEFILE "ports/zephyr/modtime.c"
+#define MICROPY_EPOCH_IS_1970       (1)
+#define MICROPY_TIMESTAMP_IMPL      (MICROPY_TIMESTAMP_IMPL_TIME_T)
 #define MICROPY_PY_ZEPHYR           (1)
 #define MICROPY_PY_ZSENSOR          (1)
 #define MICROPY_PY_SYS_MAXSIZE      (1)
